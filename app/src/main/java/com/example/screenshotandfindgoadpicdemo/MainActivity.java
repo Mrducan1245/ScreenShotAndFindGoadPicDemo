@@ -15,6 +15,7 @@ import android.media.Image;
 import android.media.ImageReader;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -31,14 +32,15 @@ public class MainActivity extends AppCompatActivity {
     private  Button btnConfirm;
     private TextView tvShowPoint;
     private ImageView ivShootScreenShot;
+    private Button btnStartServer;
     //与截图相关
     private MediaProjectionManager mediaProjectionManager;
     private MediaProjection mediaProjection;
     private WindowManager windowManager;
-    private VirtualDisplay virtualDisplay;
     private ImageReader imageReader;
-
     private final int REQUEST_CODE = 1;
+
+    private Intent serverIntent;
 
     @SuppressLint("WrongConstant")
     @Override
@@ -46,21 +48,23 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode ==  REQUEST_CODE){
             if (resultCode == Activity.RESULT_OK){
-                mediaProjection = mediaProjectionManager.getMediaProjection(resultCode,data);
+
                 //获取屏幕宽度等数据
                 Display display = windowManager.getDefaultDisplay();
                 DisplayMetrics displayMetrics = new DisplayMetrics();
+                display.getMetrics(displayMetrics);
+                int width = display.getWidth();
+                int height = display.getHeight();
+                int dpi = displayMetrics.densityDpi;
+                Log.e("onActivityResult","相关屏幕参数如下："+width+","+height+","+dpi);
+                //参数传给intent,让他带给服务
+                serverIntent = new Intent(this,ScreenShotService.class);
+                serverIntent.putExtra("code",resultCode);
+                serverIntent.putExtra("data",data);
+                serverIntent.putExtra("width",width);
+                serverIntent.putExtra("height",height);
+                serverIntent.putExtra("dpi",dpi);
 
-                Intent intent = new Intent(this,ScreenShotService.class);
-                intent.putExtra("code",resultCode);
-                intent.putExtra("date",data);
-
-                imageReader = ImageReader.newInstance(display.getWidth(),display.getHeight(),
-                        PixelFormat.RGBA_8888,1);
-                Log.e("onActivityResult"," imageReader对象是"+imageReader);
-
-                virtualDisplay = mediaProjection.createVirtualDisplay("screenshot",display.getWidth(),display.getHeight(),displayMetrics.densityDpi,
-                        DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,imageReader.getSurface(),null,null);
             }
         }
     }
@@ -72,14 +76,15 @@ public class MainActivity extends AppCompatActivity {
         btnConfirm = findViewById(R.id.btn_confirm);
         tvShowPoint = findViewById(R.id.tv_show_point);
         btnConfirm.setOnClickListener(new Onclick());
+        btnStartServer = findViewById(R.id.btn_startserver);
+        btnStartServer.setOnClickListener(new Onclick());
         tvShowPoint.setOnClickListener(new Onclick());
         ivShootScreenShot = findViewById(R.id.iv_show_screenshot);
 
-        //生成截图MediaProject
-        mediaProjectionManager = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
         windowManager = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
+        mediaProjectionManager = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
         Intent intent = mediaProjectionManager.createScreenCaptureIntent();
-        startActivityForResult(intent, REQUEST_CODE);
+        startActivityForResult(intent,REQUEST_CODE);
     }
 
 
@@ -106,7 +111,15 @@ public class MainActivity extends AppCompatActivity {
                     image.close();
                     break;
                 case R.id.tv_show_point:
+                    break;
 
+                case R.id.btn_startserver:
+                    //启动服务并且把有关mediprojection的东西发出去
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        startForegroundService(serverIntent);
+                    }else {
+                        startService(serverIntent);
+                    }
                     break;
             }
         }

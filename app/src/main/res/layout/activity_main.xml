@@ -24,6 +24,15 @@
         android:layout_centerInParent="true"
         android:textSize="15sp"/>
 
+    <Button
+        android:layout_below="@id/btn_confirm"
+        android:id="@+id/btn_startserver"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="点击启动截图服务"
+        android:layout_centerInParent="true"
+        android:textSize="15sp"/>
+
     <ImageView
         android:id="@+id/iv_show_screenshot"
         android:layout_width="match_parent"
