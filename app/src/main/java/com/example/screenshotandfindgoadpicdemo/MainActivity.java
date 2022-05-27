@@ -35,56 +35,48 @@ public class MainActivity extends AppCompatActivity {
     private Button btnStartServer;
     //与截图相关
     private MediaProjectionManager mediaProjectionManager;
-    private MediaProjection mediaProjection;
-    private WindowManager windowManager;
-    private ImageReader imageReader;
     private final int REQUEST_CODE = 1;
-
+    private MyApplication myApplication;
     private Intent serverIntent;
 
-    @SuppressLint("WrongConstant")
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode ==  REQUEST_CODE){
-            if (resultCode == Activity.RESULT_OK){
-
-                //获取屏幕宽度等数据
-                Display display = windowManager.getDefaultDisplay();
-                DisplayMetrics displayMetrics = new DisplayMetrics();
-                display.getMetrics(displayMetrics);
-                int width = display.getWidth();
-                int height = display.getHeight();
-                int dpi = displayMetrics.densityDpi;
-                Log.e("onActivityResult","相关屏幕参数如下："+width+","+height+","+dpi);
-                //参数传给intent,让他带给服务
-                serverIntent = new Intent(this,ScreenShotService.class);
-                serverIntent.putExtra("code",resultCode);
-                serverIntent.putExtra("data",data);
-                serverIntent.putExtra("width",width);
-                serverIntent.putExtra("height",height);
-                serverIntent.putExtra("dpi",dpi);
-
-            }
-        }
-    }
+    private ImageReader imageReader;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        bindView();
+        myApplication = (MyApplication) getApplication();
+
+        MediaProjectionManager mediaProjectionManager = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
+
+        Intent intent = mediaProjectionManager.createScreenCaptureIntent();
+        startActivityForResult(intent,REQUEST_CODE);
+    }
+
+    private void bindView() {
         btnConfirm = findViewById(R.id.btn_confirm);
         tvShowPoint = findViewById(R.id.tv_show_point);
         btnConfirm.setOnClickListener(new Onclick());
         btnStartServer = findViewById(R.id.btn_startserver);
         btnStartServer.setOnClickListener(new Onclick());
         tvShowPoint.setOnClickListener(new Onclick());
-        ivShootScreenShot = findViewById(R.id.iv_show_screenshot);
+        ivShootScreenShot = findViewById(R.id.iv_show_pic);
+    }
 
-        windowManager = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
-        mediaProjectionManager = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
-        Intent intent = mediaProjectionManager.createScreenCaptureIntent();
-        startActivityForResult(intent,REQUEST_CODE);
+
+    @SuppressLint("WrongConstant")
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode ==  REQUEST_CODE && resultCode == Activity.RESULT_OK){
+            serverIntent = new Intent(this,ScreenShotService.class);
+            serverIntent.putExtra("resultCode",Activity.RESULT_OK);
+            serverIntent.putExtra("data",data);
+            mediaProjectionManager = (MediaProjectionManager) getApplication().getSystemService(Context.MEDIA_PROJECTION_SERVICE);
+            myApplication.setMediaProjectionManager(mediaProjectionManager);
+        }
     }
 
 
@@ -95,20 +87,7 @@ public class MainActivity extends AppCompatActivity {
             switch (view.getId()){
                 //按下确认后就开始截图
                 case R.id.btn_confirm:
-                    Image image = imageReader.acquireLatestImage();
-                    int width = image.getWidth();
-                    int height = image.getHeight();
 
-                    final Image.Plane[] planes = image.getPlanes();
-                    final ByteBuffer byteBuffer = planes[0].getBuffer();
-                    int pixelStride = planes[0].getPixelStride();
-                    int rowStride = planes[0].getRowStride();
-                    int rowPadding = rowStride - pixelStride * width;
-
-                    Bitmap bitmap = Bitmap.createBitmap(width + rowPadding / pixelStride, height, Bitmap.Config.ARGB_8888);
-                    bitmap.copyPixelsFromBuffer(byteBuffer);
-                    ivShootScreenShot.setImageBitmap(bitmap);
-                    image.close();
                     break;
                 case R.id.tv_show_point:
                     break;
