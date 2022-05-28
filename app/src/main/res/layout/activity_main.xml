@@ -8,12 +8,15 @@
     android:padding="10dp">
 
     <ImageView
-        android:id="@+id/iv_show_pic"
+        android:id="@+id/iv_show_screenshot"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/purple_200"
         android:layout_above="@id/tv_show_point"
-        android:layout_margin="20dp"/>
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="20dp"
+        android:background="@color/purple_200" />
 
 
     <TextView
@@ -27,22 +30,22 @@
         android:layout_marginBottom="30dp"/>
 
     <Button
-        android:layout_above="@id/btn_startserver"
         android:id="@+id/btn_confirm"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="点击按钮截屏并且返回小图在的坐标位置"
+        android:layout_above="@id/btn_startserver"
         android:layout_centerInParent="true"
-        android:textSize="15sp"/>
+        android:text="点击按钮截屏并且返回小图在的坐标位置"
+        android:textSize="15sp" />
 
     <Button
         android:id="@+id/btn_startserver"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="点击启动截图服务"
+        android:layout_alignParentBottom="true"
         android:layout_centerInParent="true"
-        android:textSize="15sp"
-        android:layout_alignParentBottom="true"/>
+        android:text="点击启动截图服务"
+        android:textSize="15sp" />
 
 
 </RelativeLayout>

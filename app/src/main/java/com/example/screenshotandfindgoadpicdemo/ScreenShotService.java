@@ -7,6 +7,7 @@ import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.hardware.display.DisplayManager;
@@ -31,12 +32,14 @@ public class ScreenShotService extends Service {
 
     private int resultCode;
     private Intent resultData;
+    public Bitmap bitmap;
 
     @Override
     public void onCreate() {
         super.onCreate();
         mWindowManager = (WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
         application = (MyApplication) getApplication();
+        application.getIntermediaryl().setScreenShotService(ScreenShotService.this);
         mediaProjectionManager = application.getMediaProjectionManager();
     }
 
@@ -46,15 +49,16 @@ public class ScreenShotService extends Service {
     @SuppressLint("WrongConstant")
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        resultCode = intent.getIntExtra("code",-1);
-        resultData = intent.getParcelableExtra("data");
-        if (mediaProjection == null) {
+        if (intent != null){
+            resultCode = intent.getIntExtra("code",-1);
+            resultData = intent.getParcelableExtra("data");
+            //开启前台服务
+            startForeground(1,setNotification());
+            //获取medioProjection必须放在startForeground后面
             mediaProjection = mediaProjectionManager.getMediaProjection(resultCode,resultData);
         }
-        //开启前台服务
-        startForeground(1,setNotification());
-//        return super.onStartCommand(intent, flags, startId);
-        return 1;
+        return super.onStartCommand(intent, flags, startId);
+//        return 1;
     }
 
     /**前台服务必须设置好相关通知
@@ -102,6 +106,7 @@ public class ScreenShotService extends Service {
         ScreenShot.getWH(mWindowManager);
         ScreenShot.createImageReader();
         ScreenShot.beginScreenShot(mediaProjection,ScreenShotService.this,application.isIfSaveImage());
+        bitmap = ScreenShot.bitmap;
     }
 
     @Override

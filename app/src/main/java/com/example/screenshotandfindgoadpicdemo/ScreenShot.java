@@ -2,6 +2,7 @@ package com.example.screenshotandfindgoadpicdemo;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.PixelFormat;
 import android.hardware.display.DisplayManager;
 import android.hardware.display.VirtualDisplay;
@@ -12,6 +13,7 @@ import android.media.projection.MediaProjectionManager;
 import android.os.Build;
 import android.os.Handler;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.Surface;
 import android.view.WindowManager;
 
@@ -30,6 +32,7 @@ public class ScreenShot {
     private static VirtualDisplay virtualDisplay;
     private static ImageReader imageReader;
     public static Surface surface;
+    public static Bitmap bitmap;
 
 
     //设置媒体项目类

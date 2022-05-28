@@ -25,13 +25,14 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.nio.ByteBuffer;
 
 public class MainActivity extends AppCompatActivity {
     private  Button btnConfirm;
     private TextView tvShowPoint;
-    private ImageView ivShootScreenShot;
+    public ImageView ivShootScreenShot;
     private Button btnStartServer;
     //与截图相关
     private MediaProjectionManager mediaProjectionManager;
@@ -40,6 +41,7 @@ public class MainActivity extends AppCompatActivity {
     private Intent serverIntent;
 
     private ImageReader imageReader;
+    private ScreenShotService screenShotService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +49,9 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         bindView();
         myApplication = (MyApplication) getApplication();
+
+        //创建中介类，并把自己传给该类
+        myApplication.getIntermediaryl().setMainActivity(this);
 
         MediaProjectionManager mediaProjectionManager = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
 
@@ -61,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
         btnStartServer = findViewById(R.id.btn_startserver);
         btnStartServer.setOnClickListener(new Onclick());
         tvShowPoint.setOnClickListener(new Onclick());
-        ivShootScreenShot = findViewById(R.id.iv_show_pic);
+        ivShootScreenShot = findViewById(R.id.iv_show_screenshot);
     }
 
 
@@ -87,7 +92,14 @@ public class MainActivity extends AppCompatActivity {
             switch (view.getId()){
                 //按下确认后就开始截图
                 case R.id.btn_confirm:
-
+                    if (myApplication.getIntermediaryl().getScreenShotService() == null){
+                        Toast.makeText(view.getContext(),"服务没有启动，请先启动服务",Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    screenShotService =  myApplication.getIntermediaryl().getScreenShotService();
+                    screenShotService.startScreenShot();
+                    ivShootScreenShot.setImageBitmap(screenShotService.bitmap);
+                    Toast.makeText(view.getContext(),"截图成功",Toast.LENGTH_SHORT).show();
                     break;
                 case R.id.tv_show_point:
                     break;

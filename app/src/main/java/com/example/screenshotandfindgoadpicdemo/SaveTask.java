@@ -8,6 +8,7 @@ import android.media.Image.Plane;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Environment;
+import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 
@@ -31,8 +32,13 @@ public class SaveTask extends AsyncTask<Image, Void, Bitmap> {
         super();
         this.context = context;
         this.ifSaveImage = ifSaveImage;
-
     }
+
+    /**
+     * 不能在这里更新界面UI
+     * @param args
+     * @return
+     */
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
     protected Bitmap doInBackground(Image... args) {
@@ -41,6 +47,7 @@ public class SaveTask extends AsyncTask<Image, Void, Bitmap> {
         }
 
         Image image = args[0];
+        Log.e("SaveTask","image:"+image);
 
         int width;
         int height;
@@ -50,7 +57,6 @@ public class SaveTask extends AsyncTask<Image, Void, Bitmap> {
         } catch (IllegalStateException e) {
             return null;
         }
-
 
         final Plane[] planes = image.getPlanes();
         final ByteBuffer buffer = planes[0].getBuffer();
@@ -65,63 +71,24 @@ public class SaveTask extends AsyncTask<Image, Void, Bitmap> {
         bitmap.copyPixelsFromBuffer(buffer);
         bitmap = Bitmap.createBitmap(bitmap, 0, 0, width, height);
         image.close();
-        File fileImage = null;
 
         if (null != bitmap) {
-            fileURL = createFile();
-            if (ifSaveImage){
-                FileOutputStream fos = null;
-                try {
-                    fileImage = new File(fileURL);
-                    if (!fileImage.exists()) {
-                        fileImage.createNewFile();
-                        fos = new FileOutputStream(fileImage);
-                        bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
-                        fos.flush();
-                    }
-                } catch (IOException e) {
-                    fileImage = null;
-                } finally {
-                    if (null != fos) {
-                        try {
-                            fos.close();
-                        } catch (IOException e) {
-                        }
-                    }
-
-                }
-
-
-
-            }
-
-            //开启新的线程发送图片
-            Bitmap finalBitmap = bitmap;
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    PosteTask.posteFileName(fileName,context);
-                    PosteTask.postePic(finalBitmap);
-                    TAG = 1;
-                }
-            }).start();
-
-            if (null != bitmap && !bitmap.isRecycled() && TAG == 1) {
-                bitmap.recycle();
-                bitmap = null;
-            }
-
-            if (null != fileImage || TAG == 1) {
-                return bitmap;
-            }
+            return bitmap;
         }
 
         return null;
     }
 
+    /**
+     *  1.将执行结果返回到UI
+     *  2.接收线程任务执行结果
+     */
     @Override
     protected void onPostExecute(Bitmap bitmap) {
         super.onPostExecute(bitmap);
+        MyApplication myApplication = (MyApplication) context.getApplicationContext();
+        myApplication.getIntermediaryl().getMainActivity().ivShootScreenShot.setImageBitmap(bitmap);
+        Log.e("onPostExecute","完成一次截图并且设置好了bitmap"+bitmap);
         if (ScreenShot.surface.isValid()) {
             ScreenShot.surface.release();
         }
