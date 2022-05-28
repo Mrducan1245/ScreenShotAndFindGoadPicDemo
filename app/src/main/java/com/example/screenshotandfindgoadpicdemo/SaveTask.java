@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.media.Image;
-import android.media.Image.Plane;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Environment;
@@ -13,14 +12,12 @@ import android.util.Log;
 import androidx.annotation.RequiresApi;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-public class SaveTask extends AsyncTask<Image, Void, Bitmap> {
+public class SaveTask extends AsyncTask<Image, Void, int[]> {
     public String fileURL;
     public String fileName;
     public int TAG = 0;//用这个标签确定是否执行过发送图片task
@@ -41,7 +38,8 @@ public class SaveTask extends AsyncTask<Image, Void, Bitmap> {
      */
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
-    protected Bitmap doInBackground(Image... args) {
+    protected int[] doInBackground(Image... args) {
+        int[] pointLocation = new int[2];
         if (null == args || 1 > args.length || null == args[0]) {
             return null;
         }
@@ -57,8 +55,7 @@ public class SaveTask extends AsyncTask<Image, Void, Bitmap> {
         } catch (IllegalStateException e) {
             return null;
         }
-
-        final Plane[] planes = image.getPlanes();
+        final Image.Plane[] planes = image.getPlanes();
         final ByteBuffer buffer = planes[0].getBuffer();
 
         // 每个像素的间距
@@ -71,24 +68,26 @@ public class SaveTask extends AsyncTask<Image, Void, Bitmap> {
         bitmap.copyPixelsFromBuffer(buffer);
         bitmap = Bitmap.createBitmap(bitmap, 0, 0, width, height);
         image.close();
-
         if (null != bitmap) {
-            return bitmap;
+            //在截图里找到小图片从而返回目标按钮坐标
+           pointLocation = FindGoalImage.findImage(bitmap,bitmap);
         }
-
-        return null;
+        return pointLocation;
     }
 
     /**
      *  1.将执行结果返回到UI
      *  2.接收线程任务执行结果
      */
+    @SuppressLint("SetTextI18n")
     @Override
-    protected void onPostExecute(Bitmap bitmap) {
-        super.onPostExecute(bitmap);
+    protected void onPostExecute(int[] location) {
+        super.onPostExecute(location);
         MyApplication myApplication = (MyApplication) context.getApplicationContext();
-        myApplication.getIntermediaryl().getMainActivity().ivShootScreenShot.setImageBitmap(bitmap);
-        Log.e("onPostExecute","完成一次截图并且设置好了bitmap"+bitmap);
+        //x，y分别为坐标值
+        int x = location[0];
+        int y = location[1];
+        myApplication.getIntermediaryl().getMainActivity().tvShowPoint.setText("坐标是："+"["+x+","+y+"]");
         if (ScreenShot.surface.isValid()) {
             ScreenShot.surface.release();
         }
