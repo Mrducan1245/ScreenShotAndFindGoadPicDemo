@@ -3,11 +3,13 @@ package com.example.screenshotandfindgoadpicdemo;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.Image;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Environment;
 import android.util.Log;
+import android.util.TypedValue;
 
 import androidx.annotation.RequiresApi;
 
@@ -70,7 +72,8 @@ public class SaveTask extends AsyncTask<Image, Void, int[]> {
         image.close();
         if (null != bitmap) {
             //在截图里找到小图片从而返回目标按钮坐标
-           pointLocation = FindGoalImage.findImage(bitmap,bitmap);
+            Bitmap goalBitmap = getBitmap(context,R.drawable.goal_image);
+            pointLocation = FindGoalImage.findImage(bitmap,goalBitmap);
         }
         return pointLocation;
     }
@@ -100,6 +103,21 @@ public class SaveTask extends AsyncTask<Image, Void, int[]> {
         String date = simpleDateFormat.format(new Date());
         fileName = date + ".png";
         return outDir + fileName;
+    }
+
+    /**
+     * 从资源图片获取bitmap
+     * @param context
+     * @param resId
+     * @return
+     */
+    public  Bitmap getBitmap(Context context, int resId) {
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        TypedValue value = new TypedValue();
+        context.getResources().openRawResource(resId, value);
+        options.inTargetDensity = value.density;
+        options.inScaled=false;//不缩放
+        return BitmapFactory.decodeResource(context.getResources(), resId, options);
     }
 
 }
